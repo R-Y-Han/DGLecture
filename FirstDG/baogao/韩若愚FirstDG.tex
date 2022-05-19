@@ -1,0 +1,241 @@
+\documentclass[12pt, a4paper]{ctexart}
+
+\usepackage{amsmath}
+\usepackage{array}
+\usepackage{appendix}
+\usepackage{listings}
+\usepackage{xcolor}
+\usepackage{fontspec}
+\usepackage{underscore}
+\setmonofont{Consolas}
+\lstset{
+	breaklines=true,
+	language = C++, 
+	numbers=left,
+	backgroundcolor=\color{red!0!green!25!blue!25},%代码块背景色为浅灰色
+	rulesepcolor= \color{gray}, %代码块边框颜色
+	numberstyle= \small,%行号字体
+	frame=shadowbox%用方框框住代码块
+	frame=single
+}
+
+\title{间断有限元第一次作业报告}
+\author{九所 $\quad$ 韩若愚}
+\date{2022.3.4}
+\begin{document}
+	\maketitle
+	
+	\section{题目}
+	Consider the following ODE problem:
+	\begin{equation}
+	\begin{cases}
+	& u_x = 2 \pi \cos( 2 \pi x), \quad x \in [0,1]\\
+	& u(0) = 0.
+	\end{cases}
+	\end{equation}
+	
+	The exact solution is $ u(x) = \sin(2 \pi x) $. Code up the first DG method for $k=1$ and $ k =2$ with uniform meshes. Show error tables for the numerical erro in $L_2$ norm.
+	
+	\section{算法}
+	
+	首先对单元$[0,1]$ 进行均匀剖分。假设将区间均匀剖分为$n$份，令：
+	\begin{equation}
+	0 = x_{\frac{1}{2}} < x_{\frac{3}{2}} < \dots < x_{n-\frac{1}{2}} < x_{n+\frac{1}{2}} = 1
+	\end{equation}
+	则第$j$个区间为：$ I_j = [x_{j- \frac{1}{2}}, x_{j + \frac{1}{2}}]$，每个区间的长度都为$h = \frac{1}{n}$。记$x_{j+1/2}^- = \lim_{x \in I_j, \, x \to x_{j+1/2}} \, x, \  x_{j+1/2}^+ = \lim_{x \in I_{j+1}, \, x \to x_{j+1/2}} \, x$。
+	
+	假设所求数值解$u_h$存在的空间为：$ V_h^k := \{ v : \  v|_{I_j} \in P^k(I_j), j = 1, \dots, n \}$，其中$k$为给定常数，$P^k(I_j)$为定义在$I_j$上的最高次项不超过$k$次的多项式空间，并假设检验函数$v \in V_h^k$，用$v$乘以方程两端并在$I_j$上积分，并保证$k=0$时算法退化为一阶有限差分格式，于是得到：
+	\begin{equation}
+	\begin{split}
+	& - \int_{I_j} u_h \, v' \, dx + u_h(x_{j+1/2}^-) v(x_{j+1/2}^-) \\
+	& \qquad= u_h(x_{j-1/2}^-) v(x_{j-1/2}^+) + \int_{I_j} f \, v \, dx, \quad j = 1, \dots, n
+	\end{split}
+	\label{1}
+	\end{equation}
+	
+	在$I_j$上取定一组$P^k(I_j)$的基底$\{ \phi_j^l \}_{l=0}^k$，则数值解$u_h$在$I_j$上为：$u_h|_{I_j}(x) = \sum_{j=1}^n \sum_{l=0}^k \, u_j^l \, \phi_j^l(x)$，求解$u_h$即求解系数$u_j^l, \, j=1, \dots, n, \, l=0, \dots, k$。令检验函数$v = \phi_j^m, \, m=0, \dots, k$，则方程(\ref{1})变为：
+	\begin{equation}
+	\begin{split}
+	&\sum_{l=0}^k \, u_j^l \big[ -\int_{I_j} \phi_j^l (\phi_j^m)' \, dx + \phi_j^l(x_{j+1/2}) \phi_j^m (x_{j+1/2}) \big]\\
+	& \qquad  = u_h(x_{j-1/2}^-) \phi_j^m (x_{j-1/2}) + \int_{I_j} f \phi_j^m \, dx, \quad  j = 1, \dots, n
+	\end{split}
+	\label{2}
+	\end{equation}
+	这是一个在$I_j$上的线性方程组。
+	
+	为便于求解(\ref{2})，假设对固定的$l$，每个$I_j$上的基底$\phi_j^l, \, j=0, \dots, n$的自由度的定义形式都相同。现在假设参考单元$I=[0,1]$，$\Phi_j : I_j \to I$是从$I_j$到$I$的仿射变换，$\xi := \Phi_j(x) = (x- x_{j-1/2})/h, \, x \in I_j$。显然$\Phi_j$是$I_j$到$I$的微分同胚，$\Phi_j^{-1} (\xi) = \xi \cdot h + x_{j-1/2}$，$\Phi_j(I_j) = I$。令$\phi^l ( \xi ) = \phi_j^l \circ \Phi_j^{-1} (\xi) = \phi_j^l(x(\xi))$，因为每个区间$I_j$上$\phi_j^l$的自由度定义都相同，可以发现$\phi^l$的取法是和$j$无关的，同时$\{ \phi^l \}_{l=0}^k$也是$P^k(I)$的一组基底。考虑方程(\ref{2})中各项：
+	\begin{equation}
+	\begin{split}
+	& \frac{d}{dx} (\phi_j^m (x)) = \frac{d}{d \xi} (\phi^m(\xi)) \cdot \frac{d \xi}{dx} = (\phi^m)' (\xi) \cdot \frac{d\xi}{dx}\\
+	& \int_{I_j} \phi_j^l(x) (\phi_j^m)' (x) \, dx = \int_{I_j} \phi_j^l(x) \frac{d}{dx}(\phi_j^m (x)) \, dx\\
+	& \quad = \int_{I} \phi^l (\xi) (\phi^m)' (\xi) \frac{d\xi}{dx} \, d\xi \cdot \frac{dx}{d\xi}\\
+	& \quad = \int_{I} \phi^l(\xi) (\phi^m)'(\xi) \, d\xi
+	\end{split}
+	\end{equation}
+	
+	\begin{equation}
+	\phi_j^l(x_{j+1/2}) \phi_j^m(x_{j+1/2}) = \phi^l(1) \phi^l (1)
+	\end{equation}
+	
+	\begin{equation}
+	\begin{split}
+	& u_h(x_{j-1/2}^-) \phi_j^m(x_{j-1/2}) = u_h(x_{j-1/2}^-) \phi^m(0)\\
+	& u_h(x_{j-1/2}^-) = 
+	\begin{cases}
+	& u(0), \quad j=1\\
+	& \sum_l u_{j-1}^l \phi_{j-1}^l (x_{j-1/2}^-) = \sum_l u_{j-1}^l \phi^l(1), \quad j\ge 1
+	\end{cases}
+	\end{split}
+	\label{3}
+	\end{equation}
+	
+	\begin{equation}
+	\begin{split}
+	\int_{I_j} f(x) \phi_j^m (x) \, dx & = \int_I f(x(\xi)) \phi^m (\xi) \, d\xi \cdot \frac{dx}{d\xi} = h \cdot \int_I f(x(\xi)) \phi^m (\xi) \, d\xi\\
+	x(\xi) & = \xi \cdot h +x_{j-1/2}
+	\end{split}
+	\end{equation}
+	
+	于是所有$I_j$上的运算可以转换为$I$上的运算，方程组(\ref{2})变为：
+	\begin{equation}
+	\begin{split}
+	& \sum_{l=0}^n u_j^l \big[ - \int_{I} \phi^l (\phi^m)' \, d\xi + \phi^l(1) \phi^m(1) \big]\\
+	& = u_h(x_{j-1/2}^-) \phi^m(0) + h \int_I f(\xi h + x_{j - 1/2})\phi^m(\xi) \, d\xi,\\
+	& \quad j= 1, \dots , k
+	\end{split}
+	\label{4}
+	\end{equation}
+	其中$u_h(x_{j-1/2}^-)$由(\ref{3})给出。方程组(\ref{4})可写为矩阵形式：$A \textbf{u}_j = B_j$，其中$A$为$(k+1) \times (k+1)$维方阵，其第$(m,l)$个元素为$a_{ml} = - \int_{I} \phi^l (\phi^m)' \, d\xi + \phi^l(1) \phi^m(1)$，$\textbf{u}_j = (u_j^0, \dots, u_j^n)^T$为需要求解的列向量，$B_j$为$k+1$维列向量，第$m$个元素为$B_j^m = u_h(x_{j-1/2}^-) \phi^m(0) + h \int_I f(\xi h + x_{j - 1/2})\phi^m(\xi) \, d\xi$。
+		
+	最后在每个$I_j$上令：$\phi_j^0(x) = 1, \  \phi_j^1(x) = (x- x_{j-1/2})/(x_{j+1/2}-x_{j-1/2})$, $\phi_j^2(x) = (x- x_{j-1/2})^2/(x_{j+1/2}-x_{j-1/2})^2, \  x \in I_j$，则参考单元$I$上相应的基底为：$ \phi^0(\xi) = 1, \  \phi^1(\xi) = \xi, \ \phi^2(\xi) = \xi^2, \ \xi \in I$。通过简单计算能直接得到$A$的值如下：
+	\begin{equation}
+	\mbox{k=1时}: \quad A=
+	\begin{bmatrix}
+	1 & 1 \\
+	0 & 1/2
+	\end{bmatrix}
+	\quad A^{-1} = 
+	\begin{bmatrix}
+	1 & -2 \\
+	0 & 2
+	\end{bmatrix}
+	\end{equation}
+	
+	\begin{equation}
+	\mbox{k=2时}: \quad A = 
+	\begin{bmatrix}
+	1 & 1 & 1 \\
+	0 & 1/2 & 2/3 \\
+	0 & 1/3 & 1/2
+	\end{bmatrix}
+	\quad A^{-1} = 
+	\begin{bmatrix}
+	1 & -6 & 6\\
+	0 & 18 & -24\\
+	0 & -12 & 18
+	\end{bmatrix}
+	\end{equation}
+	对于$B_j$中的积分项用复化梯形公式计算。
+	
+	\section{计算结果}
+	
+	将$I_j$上的基底$\phi_j^l$延拓到整个区间：令
+	$$
+	\varphi_j^l (x) = 
+	\begin{cases}
+	& \phi_j^l(x), \quad x \in I_j\\
+	& 0, \quad else
+	\end{cases}
+	$$
+	则数值解$u_h(x) = \sum_{j=0}^n \sum_{l=0}^k \, u_j^l \varphi_j^l(x)$。假设真解为$u$，则$L^2$误差为：
+	\begin{equation}
+	\begin{split}
+	e & = (\int_0^1 |u - u_h|^2 \, dx)^{1/2} = (\sum_{j=0}^n \int_{I_j} |u(x)-\sum_{j=0}^k u_j^l \varphi_j^l(x) |^2 \, dx )^{1/2}\\
+	& = (\sum_{j=0}^n \int_{I_j} |u(x) - \sum_{l=0}^k u_j^l \phi_j^l(x)|^2 \, dx )^{1/2}\\
+	& = (\sum_{j=0}^n \int_{I_j} |u(x) - \sum_{l=0}^k u_j^l \phi^l (\xi(x)) |^2 \, dx )^{1/2}
+	\end{split}
+	\end{equation}
+	
+	在计算积分时使用梯形公式数值计算，将每个$I_j$上的积分$\int_{I_j} |u(x) - \sum_{l=0}^k u_j^l \phi^l (\xi(x)) |^2 \, dx$近似为
+	$$
+	( |u(x_{j+1/2}) - \sum_l u_j^l \phi^l(1) |^2 + | u(x_{j-1/2}) - \sum_l u_j^l \phi^l(0) |^2 ) \cdot h /2
+	$$
+	于是得到误差表如下（保留三位小数）：
+	\begin{table}[htbp]
+		\centering
+		\caption{$k=1$}
+		\begin{tabular}{| p{80pt}<{\centering} | p{80pt}<{\centering} | p{80pt}<{\centering} |}
+			\hline
+			n & $L^2$ error & order\\
+			\hline
+			10 & 3.306e-2 &  \\
+			\hline
+			20 & 8.327e-3 & 1.989 \\
+			\hline
+			40 & 2.086e-3 & 1.997 \\
+			\hline
+			80 & 5.217e-4 & 1.999 \\
+			\hline
+			160 & 1.304e-4 & 2.000 \\
+			\hline
+			320 & 3.261e-5 & 2.000 \\
+			\hline
+		\end{tabular}
+	\end{table}
+
+	\begin{table}[htbp]
+		\centering
+		\caption{$k=2$}
+		\begin{tabular}{| p{80pt}<{\centering} | p{80pt}<{\centering} | p{80pt}<{\centering} |}
+			\hline
+			n & $L^2$ error & order\\
+			\hline
+			10 & 2.051e-3 &  \\
+			\hline
+			20 & 2.573e-4 & 2.995 \\
+			\hline
+			40 & 3.197e-5 & 3.009 \\
+			\hline
+			80 & 3.880e-6 & 3.043 \\
+			\hline
+			160 & 4.261e-7 & 3.187 \\
+			\hline
+			320 & 2.381e-8 & 4.162 \\
+			\hline
+		\end{tabular}
+	\end{table}
+
+	\section{分析}
+	
+	通过误差表可以看到当$k=1$时收敛阶稳定在二阶，$k=2$时收敛阶在三阶附近。而且步长相同时，$k=2$得到的误差比$k=1$得到的误差小了几个数量级，$k=2$时得到的结果更为精确。
+	
+	对真解$u(x)= \sin(2\pi x)$在$x = x_{j-1/2}$处Taylor展开：
+	\begin{equation}
+	\begin{split}
+	u(x) = & \sin(2\pi x_{j-1/2}) + 2\pi \cos(2\pi x_{j-1/2}) (x - x_{j-1/2})\\
+	& - 2\pi^2 \sin(2\pi x_{j-1/2}) (x- x_{j-1/2})^2 + O((x- x_{j-1/2})^3)
+	\end{split}
+	\label{taylor}
+	\end{equation}
+	注意到$I_j$上基底$\{\phi_j^l\}_{l=0}^2$的定义形式，(\ref{taylor})变为：
+	\begin{equation}
+	\begin{split}
+	u(x) = & \sin(2\pi x_{j-1/2}) \phi_j^0(x) + 2\pi \cos(2\pi x_{j-1/2}) h \phi_j^1(x)\\
+	& - 2\pi^2 \sin(2\pi x_{j-1/2}) h^2 \phi_j^2(x) + O((x- x_{j-1/2})^3)
+	\end{split}
+	\end{equation}
+	
+	$u$显然满足方程(\ref{1})，由于$v$的任意性，忽略$u$的无穷小量，应有：
+	\begin{equation*}
+	\begin{split}
+	u_h(x) = & \sin(2\pi x_{j-1/2}) \phi_j^0(x) + 2\pi \cos(2\pi x_{j-1/2}) h \phi_j^1(x)\\
+	& - 2\pi^2 \sin(2\pi x_{j-1/2}) h^2 \phi_j^2(x) \quad a.e.
+	\end{split}
+	\end{equation*}
+	
+	所以$k=1, \  k=2$时收敛阶分别应该是$2, 3$。计算结果是符合理论的。
+	
+	但是在数值求解$k=2$情况的时候可以看到阶数在不断变大，最后变成了4。实际上在计算$k=2$的情况时我发现，方程组$A\textbf{u}_j =B_j$中右端项$B_j$的一个小扰动在步长比较小($h <= 0.0125$)时对误差阶数会产生比较大的影响，我认为这是机器误差导致的，因为实际上当右端项扰动在1e-4左右时，对$L^2$范数误差的影响只在1e-7左右。虽然从结果上看对真解的逼近仍然非常好，但是误差的收敛阶却受到了比较大的影响。但是在$k=1$的情况下却不会出现这样的问题。
+	
+	
+\end{document}

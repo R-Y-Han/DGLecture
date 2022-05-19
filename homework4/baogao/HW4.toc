@@ -1,0 +1,13 @@
+\contentsline {section}{\numberline {1}题目}{2}{}%
+\contentsline {section}{\numberline {2}算法}{2}{}%
+\contentsline {subsection}{\numberline {2.1}真解}{2}{}%
+\contentsline {subsection}{\numberline {2.2}DG格式}{3}{}%
+\contentsline {section}{\numberline {3}限制器}{5}{}%
+\contentsline {subsection}{\numberline {3.1}TVD 限制器}{6}{}%
+\contentsline {subsection}{\numberline {3.2}TVB限制器}{7}{}%
+\contentsline {subsection}{\numberline {3.3}MPP限制器}{7}{}%
+\contentsline {section}{\numberline {4}数值结果}{8}{}%
+\contentsline {subsection}{\numberline {4.1}$T=0.4$}{8}{}%
+\contentsline {subsection}{\numberline {4.2}$T=1.5$}{11}{}%
+\contentsline {section}{\numberline {5}分析}{11}{}%
+\contentsline {section}{\numberline {6}代码}{15}{}%

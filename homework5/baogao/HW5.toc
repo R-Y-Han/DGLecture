@@ -1,0 +1,10 @@
+\contentsline {section}{\numberline {1}题目}{1}{}%
+\contentsline {section}{\numberline {2}真解}{2}{}%
+\contentsline {section}{\numberline {3}算法}{2}{}%
+\contentsline {subsection}{\numberline {3.1}bad DG}{2}{}%
+\contentsline {subsection}{\numberline {3.2}LDG}{3}{}%
+\contentsline {section}{\numberline {4}数值结果}{4}{}%
+\contentsline {subsection}{\numberline {4.1}bad DG}{4}{}%
+\contentsline {subsection}{\numberline {4.2}LDG}{5}{}%
+\contentsline {section}{\numberline {5}分析}{6}{}%
+\contentsline {section}{\numberline {6}代码}{6}{}%
