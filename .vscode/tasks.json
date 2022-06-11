@@ -1,0 +1,31 @@
+
+{
+    "version": "2.0.0",
+    "command": "g++",
+    "args": [
+        "-g",
+        "${file}",
+        //"-I", "F:/C++code/RiemannSolver/Godunov",
+        //"F:/C++code/RiemannSolver/Godunov/sampling.cpp",
+        "-o",
+        "${workspaceFolder}/exe/${fileBasenameNoExtension}.exe"
+    ], // 编译命令参数
+    "problemMatcher": {
+        "owner": "cpp",
+        "fileLocation": [
+            "relative",
+            "\\"
+        ],
+        "pattern": {
+            "regexp": "^(.*):(\\d+):(\\d+):\\s+(warning|error):\\s+(.*)$",
+            "file": 1,
+            "line": 2,
+            "column": 3,
+            "severity": 4,
+            "message": 5
+        }
+    },
+    "presentation": { 
+        "panel": "new" //默认为“shared“表示共享，改成new之后每个进程创建新的端口
+    }
+}
